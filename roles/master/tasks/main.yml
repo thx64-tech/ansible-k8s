@@ -1,16 +1,23 @@
 ---
 
+- name: Check if cluster_initialized.txt exists
+  stat:
+    path: "/home/{{ adm1 }}/cluster_initialized.txt"
+  register: file_check
+
 - name: Initialize the cluster
   ansible.builtin.shell: kubeadm init --pod-network-cidr=10.0.0.0/16
-  args:
-    chdir: $HOME
-  register: kubeadm_init_result
-  changed_when: kubeadm_init_result.rc == 0
-  creates: cluster_initialized.txt
+  when: file_check.stat.exists == False
+
+- name: Create cluster_initialized.txt
+  ansible.builtin.file:
+    path: "/home/{{ adm1 }}/cluster_initialized.txt"
+    state: touch
+  when: file_check.stat.exists == False
 
 - name: Create .kube directory
   ansible.builtin.file:
-    path: "/home/{{ user }}/.kube"
+    path: "/home/{{ adm1 }}/.kube"
     state: directory
     mode: '0755'
 
@@ -18,9 +25,9 @@
   ansible.builtin.copy:
     remote_src: yes
     src: /etc/kubernetes/admin.conf
-    dest: "/home/{{ user }}/.kube/config"
-    owner: "{{ user }}"
-    group: "{{ user }}"
+    dest: "/home/{{ adm1 }}/.kube/config"
+    owner: "{{ adm1 }}"
+    group: "{{ adm1 }}"
     mode: "0644"
 
 - name: Install calico Pod network
