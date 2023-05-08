@@ -1,0 +1,37 @@
+- name: Creation du user
+  ansible.builtin.user:
+    name: "{{ user }}"
+    createhome: true
+    shell: /usr/bin/bash
+    comment: "compte {{ user }}"
+    groups: sudo,users,adm
+    state: present
+
+- name: Password for user
+  ansible.builtin.user:
+    name: "{{ user }}"
+    password: "{{ user_pswd | password_hash('sha512') }}"
+
+- name: Affectation cle ssh
+  ansible.posix.authorized_key:
+    user: "{{ user }}"
+    state: present
+    key: "{{ lookup('file', '/home/{{ adm1 }}/.ssh/id_ed25519.pub') }}"
+
+- name: Add alias to .bashrc
+  vars:
+    alias_template: "{{ lookup('template', 'alias.j2') }}"
+  ansible.builtin.lineinfile:
+    path: /home/{{ user }}/.bashrc
+    line: "{{ item }}"
+    regexp: "^{{ item }}$"
+  with_items:
+    - "{{ alias_template.split('\n') }}"
+
+- name: Config sudo
+  ansible.builtin.template:
+    src: templates/sudoers.j2
+    dest: /etc/sudoers.d/{{ user }}-sudoers
+    owner: root
+    group: root
+    mode: '0644'

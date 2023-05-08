@@ -1,0 +1,22 @@
+---
+
+- name: Create ~/.local/bin if it does not exist
+  ansible.builtin.file:
+    path: /home/{{ user }}/.local/bin
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0755'
+
+- name: Telechargement de kubectl
+  ansible.builtin.get_url:
+    url: https://dl.k8s.io/release/{{ lookup('url', 'https://dl.k8s.io/release/stable.txt') }}/bin/linux/amd64/kubectl
+    dest: /home/{{ user }}/.local/bin/kubectl
+    mode: '0755'
+
+- name: Change mode kubectl
+  ansible.builtin.file:
+    path: /home/{{ user }}/.local/bin/kubectl
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0711'

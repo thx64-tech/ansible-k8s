@@ -1,0 +1,35 @@
+---
+
+- name: Activation de modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: Create sysctl conf file
+  ansible.builtin.file:
+    path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+    owner: root
+    group: root
+    state: touch
+    mode: '0644'
+
+- name: Add Ipforwarding et bridged traffic
+  vars:
+    alias_template: "{{ lookup('template', 'bridge.j2') }}"
+  ansible.builtin.lineinfile:
+    path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+    line: "{{ item }}"
+    regexp: "^{{ item }}$"
+  with_items:
+    - "{{ alias_template.split('\n') }}"
+
+- name: Apply new settings
+  ansible.builtin.command: sudo sysctl --system
+
+- name: Configuration par défaut de containerd
+  ansible.builtin.shell: |
+    containerd config default | tee /etc/containerd/config.toml
+    systemctl restart containerd

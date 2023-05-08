@@ -1,0 +1,35 @@
+---
+
+- name: Personnalisation des users
+  ansible.builtin.include_tasks:
+    file: user.yml
+
+- name: Mise à jour du système
+  ansible.builtin.apt:
+    upgrade: true
+
+- name: Install des packages de base Ubuntu
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    update_cache: true
+    state: present
+  with_items:
+    - "{{ pre_package }}"
+
+- name: Install de containerd
+  ansible.builtin.include_tasks:
+    file: container.yml
+
+- name: Configuration pour containerd
+  ansible.builtin.include_tasks:
+    file: confcont.yml
+
+
+- name: Supprime les dépendances non nécessaires
+  ansible.builtin.apt:
+    autoremove: true
+    autoclean: true
+
+- name: Personnalisation des serveurs
+  ansible.builtin.include_tasks:
+    file: perso.yml

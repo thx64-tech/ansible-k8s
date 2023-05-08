@@ -1,0 +1,18 @@
+---
+
+- name: Creation d'un cluster k8s
+  hosts: k8s
+  remote_user: "{{ adm1 }}"
+  become: true
+
+  roles:
+    - pré-requis
+    - apps
+
+- name: Initialisation du master
+  hosts: master
+  remote_user: "{{ adm1 }}"
+  become: true
+
+  roles:
+    - master
