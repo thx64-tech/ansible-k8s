@@ -29,7 +29,26 @@
 - name: Apply new settings
   ansible.builtin.command: sudo sysctl --system
 
-- name: Configuration par défaut de containerd
-  ansible.builtin.shell: |
-    containerd config default | tee /etc/containerd/config.toml
-    systemctl restart containerd
+- name: Configuration du daemon docker
+  ansible.builtin.template:
+    src: templates/docker.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Désactivation du service docker
+  ansible.builtin.systemd:
+    name: docker
+    state: stopped
+    enabled: false
+
+- name: Création du fichier de config containerd
+  ansible.builtin.template:
+    src: templates/configtoml.j2
+    dest: /etc/containerd/config.toml
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart containerd

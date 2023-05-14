@@ -1,3 +1,5 @@
-user: k8admin
+user: kubernetes-admin
 adm1: thx64
 user_pswd: poiuytre
+
+cluster_cidr: 10.0.0.0/16

@@ -7,9 +7,8 @@
 
 - name: Add Docker repository
   ansible.builtin.apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu lunar stable
     state: present
-    filename: docker-ce
 
 - name: Install Containerd
   ansible.builtin.apt:
@@ -31,3 +30,11 @@
   ansible.builtin.apt:
     name: "{{ liste_package }}"
     state: present
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    group: docker
+  loop:
+    - "{{ user }}"
+    - "{{ adm1 }}"
