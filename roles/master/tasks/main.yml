@@ -23,6 +23,7 @@
     mode: '0755'
 
 - name: Copy admin.conf
+  become: true
   ansible.builtin.copy:
     remote_src: yes
     src: /etc/kubernetes/admin.conf
@@ -31,12 +32,57 @@
     group: "{{ user }}"
     mode: "0644"
 
-- name: Install calico Pod network
+- name: Provisioning cni
+  ansible.builtin.include_tasks:
+    file: cni.yml
+
+- name: Création du cluster rôle
+  ansible.builtin.command: kubectl apply -f calico-cni.yml
+  register: calico_cluster
+
+- name: Bind du cluster rôle
+  ansible.builtin.command: kubectl create clusterrolebinding calico-cni --clusterrole=calico-cni --user=calico-cni
+  register: calico_bind
+  failed_when: calico_bind.rc != 0 and "already exists" not in calico_bind.stderr
+
+- name: Check if Tigera Operator is installed
+  ansible.builtin.stat:
+    path: "/home/{{ user }}/tigerop.txt"
+  register: tigera_operator_flag
+
+- name: Install Tigera Operator
   ansible.builtin.shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/tigera-operator.yaml
   args:
     chdir: $HOME
+  changed_when: false
+  register: tigera_operator_installation
+  when: tigera_operator_flag.stat.exists == false
 
-- name: Install calico custom resource
+- name: Create flag file indicating Tigera Operator installation
+  ansible.builtin.file:
+    path: "/home/{{ user }}/tigerop.txt"
+    state: touch
+  when: tigera_operator_installation.changed and tigera_operator_flag.stat.exists == false
+
+- name: Check if Tigera Custom Resource is installed
+  ansible.builtin.stat:
+    path: "/home/{{ user }}/tigercustom.txt"
+  register: tigera_custom_flag
+
+- name: Install Tigera custom resource
   ansible.builtin.shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/custom-resources.yaml
   args:
     chdir: $HOME
+  changed_when: false
+  register: tigera_custom_installation
+  when: tigera_custom_flag.stat.exists == false
+
+- name: Create flag file indicating Tigera custom installation
+  ansible.builtin.file:
+    path: "/home/{{ user }}/tigercustom.txt"
+    state: touch
+  when: tigera_custom_installation.changed and tigera_custom_flag.stat.exists == false
+
+- name: Provisioning cni-plugin
+  ansible.builtin.include_tasks:
+    file: cniplugin.yml

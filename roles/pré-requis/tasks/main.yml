@@ -8,6 +8,10 @@
   ansible.builtin.apt:
     upgrade: true
 
+- name: Personnalisation des serveurs
+  ansible.builtin.include_tasks:
+    file: perso.yml
+
 - name: Install des packages de base Ubuntu
   ansible.builtin.apt:
     name: "{{ item }}"
@@ -24,12 +28,7 @@
   ansible.builtin.include_tasks:
     file: confcont.yml
 
-
 - name: Supprime les dépendances non nécessaires
   ansible.builtin.apt:
     autoremove: true
     autoclean: true
-
-- name: Personnalisation des serveurs
-  ansible.builtin.include_tasks:
-    file: perso.yml

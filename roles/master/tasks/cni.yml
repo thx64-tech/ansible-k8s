@@ -1,0 +1,38 @@
+---
+
+- name: Création du dossier .ssl
+  ansible.builtin.file:
+    path: "/home/{{ user }}/.ssl"
+    state: directory
+
+- name: Création des clés
+  ansible.builtin.shell: |
+    cd "/home/{{ user }}/.ssl"
+    openssl req -newkey rsa:4096 -keyout cni.key -nodes -out cni.csr -subj "{{ cni_subject }}"
+  args:
+    creates: cni.key
+
+- name: Création des certificats
+  become: true
+  ansible.builtin.shell: |
+    cd "/home/{{ user }}/.ssl"
+    openssl x509 -req -in cni.csr -CA "{{ ca_crt }}" -CAkey "{{ ca_key }}" -CAcreateserial -out cni.crt -days 365
+    chown "{{ user}}":"{{ user }}" cni.crt
+  args:
+    creates: cni.crt
+
+- name: Création du fichier cni.kubeconfig
+  ansible.builtin.template:
+    src: templates/cnikubeconfig.j2
+    dest: "/home/{{ user }}/.ssl/cni.kubeconfig"
+    owner: "{{ user }}"
+    group: docker
+    mode: '0644'
+
+- name: Création du fichier calico-cni.yml
+  ansible.builtin.template:
+    src: templates/calicocni.j2
+    dest: "/home/{{ user }}/calico-cni.yml"
+    owner: "{{ user }}"
+    group: docker
+    mode: '0644'

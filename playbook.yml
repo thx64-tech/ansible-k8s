@@ -11,8 +11,7 @@
 
 - name: Initialisation du master
   hosts: master
-  remote_user: "{{ adm1 }}"
-  become: true
+  remote_user: "{{ user }}"
 
   roles:
     - master

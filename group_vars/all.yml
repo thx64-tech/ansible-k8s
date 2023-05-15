@@ -3,3 +3,7 @@ adm1: thx64
 user_pswd: poiuytre
 
 cluster_cidr: 10.0.0.0/16
+cni_subject: "/CN=calico-cni"
+cni_path: "/etc/kubernetes/pki"
+ca_crt: "{{ cni_path }}/ca.crt"
+ca_key: "{{ cni_path }}/ca.key"

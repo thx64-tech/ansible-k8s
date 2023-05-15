@@ -1,0 +1,40 @@
+---
+
+- name: Téléchargement de calico.amd
+  become: true
+  ansible.builtin.get_url:
+    url: https://github.com/projectcalico/cni-plugin/releases/download/v3.20.6/calico-amd64
+    dest: /opt/cni/calico
+    mode: '0755'
+
+- name: Téléchargement de calico-ipam.amd
+  become: true
+  ansible.builtin.get_url:
+    url: https://github.com/projectcalico/cni-plugin/releases/download/v3.20.6/calico-ipam-amd64
+    dest: /opt/cni/calico-ipam
+    mode: '0755'
+
+- name: Changement droit des fichiers
+  become: true
+  ansible.builtin.file:
+    name: "{{ item }}"
+    mode: '0755'
+  loop:
+    - /opt/cni/calico
+    - /opt/cni/calico-ipam
+
+- name: Copie de cni.kubeconfig
+  become: true
+  ansible.builtin.copy:
+    src: /home/{{ user }}/.ssl/cni.kubeconfig
+    dest: /etc/cni/net.d/calico-kubeconfig
+    mode: '0600'
+
+- name: Création du fichier 10-calico.conflist
+  become: true
+  ansible.builtin.template:
+    src: templates/10-calico.j2
+    dest: "/etc/cni/net.d/10-calico.conflist"
+    owner: root
+    group: root
+    mode: '0644'

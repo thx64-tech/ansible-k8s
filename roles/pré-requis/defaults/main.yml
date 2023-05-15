@@ -6,9 +6,9 @@ pre_package:
   - gnupg-agent
   - lsb-release
   - software-properties-common
+  - apt-utils
 
 liste_package:
-  - apt-utils
   - docker-ce
   - docker-ce-cli
   - containerd.io
