@@ -26,7 +26,7 @@
 - name: Copie de cni.kubeconfig
   become: true
   ansible.builtin.copy:
-    src: /home/{{ user }}/.ssl/cni.kubeconfig
+    src: "/home/{{ user }}/.ssl/cni.kubeconfig"
     dest: /etc/cni/net.d/calico-kubeconfig
     mode: '0600'
 

@@ -58,11 +58,15 @@
   register: tigera_operator_installation
   when: tigera_operator_flag.stat.exists == false
 
+- name: Debug tigera_operator_installation
+  ansible.builtin.debug:
+    var: tigera_operator_installation
+
 - name: Create flag file indicating Tigera Operator installation
   ansible.builtin.file:
     path: "/home/{{ user }}/tigerop.txt"
     state: touch
-  when: tigera_operator_installation.changed and tigera_operator_flag.stat.exists == false
+  when: tigera_operator_installation.rc == 0 and tigera_operator_flag.stat.exists == false
 
 - name: Check if Tigera Custom Resource is installed
   ansible.builtin.stat:
@@ -74,6 +78,7 @@
   args:
     chdir: $HOME
   changed_when: false
+  ignore_errors: true
   register: tigera_custom_installation
   when: tigera_custom_flag.stat.exists == false
 
@@ -81,7 +86,7 @@
   ansible.builtin.file:
     path: "/home/{{ user }}/tigercustom.txt"
     state: touch
-  when: tigera_custom_installation.changed and tigera_custom_flag.stat.exists == false
+  when: not tigera_custom_installation.failed and tigera_custom_flag.stat.exists == false
 
 - name: Provisioning cni-plugin
   ansible.builtin.include_tasks:
